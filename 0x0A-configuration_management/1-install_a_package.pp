@@ -1,6 +1,9 @@
-# Here, the Puppet manifest installs puppet-lint
+# Puppet manifest to install Flask using pip3
 
-package { 'puppet-lint':
-  ensure   => '2.1.1',
-  provider => 'gem',
+# Ensuring the package is present
+package { 'flask':
+  ensure   => '2.1.0',
+  provider => 'pip3',
 }
+
+# End of Puppet manifest
