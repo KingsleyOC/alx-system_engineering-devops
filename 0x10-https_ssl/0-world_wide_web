@@ -5,14 +5,17 @@ get_subdomain_info() {
     local subdomain="$2"
 
     # Perform DNS query for the subdomain
-    result=$(dig "$subdomain.$domain" | grep -A1 'ANSWER SECTION:')
+    result=$(dig +short "$subdomain.$domain")
 
-    # Extract relevant information using awk
-    subdomain_record=$(echo "$result" | awk '/IN[[:space:]]A/ {print $1}')
-    subdomain_ip=$(echo "$result" | awk '/IN[[:space:]]A/ {print $NF}')
-
-    # Display the information
-    echo "The subdomain $subdomain is a $subdomain_record record and points to $subdomain_ip"
+    # Check if the result is empty
+    if [ -z "$result" ]; then
+        echo "The subdomain $subdomain does not exist for $domain"
+    else
+        # Display the information
+        record_type=$(dig "$subdomain.$domain" | awk '/IN[[:space:]]A/ {print $1}')
+        destination=$(dig "$subdomain.$domain" | awk '/IN[[:space:]]A/ {print $NF}')
+        echo "The subdomain $subdomain is a $record_type record and points to $destination"
+    fi
 }
 
 # Main script
