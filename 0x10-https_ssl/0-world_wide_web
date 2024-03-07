@@ -1,3 +1,32 @@
-1
-2
-3
+#!/usr/bin/env bash
+# Function to display information about a subdomain
+get_subdomain_info() {
+    local domain="$1"
+    local subdomain="$2"
+
+    # Perform DNS query for the subdomain
+    result=$(dig "$subdomain.$domain" | grep -A1 'ANSWER SECTION:')
+
+    # Extract relevant information using awk
+    subdomain_record=$(echo "$result" | awk '/IN[[:space:]]A/ {print $1}')
+    subdomain_ip=$(echo "$result" | awk '/IN[[:space:]]A/ {print $NF}')
+
+    # Display the information
+    echo "The subdomain $subdomain is a $subdomain_record record and points to $subdomain_ip"
+}
+
+# Main script
+if [ "$#" -eq 1 ]; then
+    # If only domain is provided, display information for default subdomains
+    get_subdomain_info "$1" "www"
+    get_subdomain_info "$1" "lb-01"
+    get_subdomain_info "$1" "web-01"
+    get_subdomain_info "$1" "web-02"
+elif [ "$#" -eq 2 ]; then
+    # If both domain and subdomain are provided, display information for the specified subdomain
+    get_subdomain_info "$1" "$2"
+else
+    # Display usage message if incorrect number of arguments is provided
+    echo "Usage: $0 <domain> [subdomain]"
+    exit 1
+fi
