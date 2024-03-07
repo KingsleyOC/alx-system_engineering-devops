@@ -1,35 +1,30 @@
 #!/usr/bin/env bash
-# Function to display information about a subdomain
-get_subdomain_info() {
-    local domain="$1"
-    local subdomain="$2"
+# script to report information about server domains
+# shellcheck disable=SC2086
+check_domain() {
+	# awk will use record seperator of space
+	# space sperated list of sub domains
+	SUBDOMAINS='www lb-01 web-01 web-02'
 
-    # Perform DNS query for the subdomain
-    result=$(dig +short "$subdomain.$domain")
-
-    # Check if the result is empty
-    if [ -z "$result" ]; then
-        echo "The subdomain $subdomain does not exist for $domain"
-    else
-        # Display the information
-        record_type=$(dig "$subdomain.$domain" | awk '/IN[[:space:]]A/ {print $1}')
-        destination=$(dig "$subdomain.$domain" | awk '/IN[[:space:]]A/ {print $NF}')
-        echo "The subdomain $subdomain is a $record_type record and points to $destination"
-    fi
+	if [ -z "$1" ]; then
+		exit
+	fi
+	# no sub domain specified, do all
+	if [ -z "$2" ]; then
+		echo "$SUBDOMAINS" | awk -v domain="$1"\
+		'BEGIN { RS=" " }
+		{split($0,ARR," ");
+		cmd = "dig " ARR[1]"."domain " | grep -A1 \"ANSWER SECTION:\" | tail -n1";
+		system(cmd)
+		close(cmd)}' | awk\
+		'{
+		split($0, DOMS, ".");
+		print "The subdomain " DOMS[1] " is a " $4 " record and points to " $5}'
+	else
+		dig "$2.$1" | grep -A1 "ANSWER SECTION:" | tail -n1 | awk\
+		'{
+		split($0, DOMS, ".");
+		print "The subdomain " DOMS[1] " is a " $4 " record and points to " $5}'
+	fi
 }
-
-# Main script
-if [ "$#" -eq 1 ]; then
-    # If only domain is provided, display information for default subdomains
-    get_subdomain_info "$1" "www"
-    get_subdomain_info "$1" "lb-01"
-    get_subdomain_info "$1" "web-01"
-    get_subdomain_info "$1" "web-02"
-elif [ "$#" -eq 2 ]; then
-    # If both domain and subdomain are provided, display information for the specified subdomain
-    get_subdomain_info "$1" "$2"
-else
-    # Display usage message if incorrect number of arguments is provided
-    echo "Usage: $0 <domain> [subdomain]"
-    exit 1
-fi
+check_domain "$1" "$2"
