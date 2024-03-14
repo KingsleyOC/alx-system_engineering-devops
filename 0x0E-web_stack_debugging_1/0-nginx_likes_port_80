@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Script configures Nginx to listen on port 80
-#this is spam
-#this is spam
-sed -i 's/8080/80/g' /etc/nginx/sites-enabled/default
-service nginx restart
+# Script to configure Nginx to listen on port 80
+
+# Restart Nginx to apply changes
+sudo systemctl restart nginx
