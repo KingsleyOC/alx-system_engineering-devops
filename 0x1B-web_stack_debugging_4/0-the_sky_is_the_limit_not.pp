@@ -1,15 +1,8 @@
-# Increases the amount of traffic an Nginx server can handle.
-
-# Increase the ULIMIT of the default file
-exec { 'fix--for-nginx':
-  command => 'sed -i "s/15/4096/" /etc/default/nginx',
-  path    => '/usr/local/bin/:/bin/',
-  notify  => Exec['nginx-restart'],  # Add notification to restart nginx after changing the ulimit
-} ->
-
-# Restart Nginx
-exec { 'nginx-restart':
-  command     => '/etc/init.d/nginx restart',  # Correct the command to restart nginx
-  refreshonly => true,  # Make sure this exec only runs when triggered by notification
-  subscribe   => File['/etc/default/nginx'],  # Add subscription to the file change
+#0-the_sky_is_the_limit_not.pp set open file limit higher
+exec { 'set limit to 2000':
+  path    => '/bin',
+  command => "sed -i 's/15/2000/' /etc/default/nginx"
+}
+exec { 'reboot nginx':
+  command => '/usr/sbin/service nginx restart'
 }
